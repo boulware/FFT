@@ -11,6 +11,8 @@ from matplotlib.figure import Figure
 
 import scipy.fftpack
 
+np.set_printoptions(threshold=np.inf)
+
 # Creates an immutable tuple to store WAV file data
 WAVData = namedtuple(	'WAVData',
 						['raw_data',
@@ -22,6 +24,7 @@ WAVData = namedtuple(	'WAVData',
 
 root = tk.Tk()
 file = []
+fft_raw_data = []
 
 def OpenWAVFile():
 	file_name = filedialog.askopenfilename()
@@ -43,17 +46,12 @@ def OpenWAVFile():
 	T = file.frame_count / file.sampling_frequency # Sample length in seconds
 	frq = k / T
 
-	print(file.raw_data)
-	#for b in file.raw_data:
-		#print(b)
-	#sub_fig.plot(t, file.raw_data)
-	#sub_fig.show()
-	#plt.axis([0.0, t[:0], -6000.0, 6000.0])
-	#plt.plot(t, file.raw_data)
-	#plt.ylim([-6000.0, 6000.0])
-	#plt.show()
+	#print(file.raw_data)
 
+	global fft_raw_data
 	fft_raw_data = scipy.fftpack.fft(file.raw_data)
+	print("fft_raw_data(1):")
+	print(fft_raw_data)
 
 	waveform_plot.plot(t, file.raw_data)
 	fft_plot.plot(frq, fft_raw_data)
@@ -66,11 +64,19 @@ def OpenWAVFile():
 	toolbar.update()
 	canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
-	#canvas = FigureCanvasTkAgg(fig, master=root)
+def ExportCSV():
+	csv_filename = filedialog.asksaveasfilename(filetypes=[("Comma-separated values", 'csv')])
+	with open(csv_filename + '.csv', 'wt') as csv_file:
+		global fft_raw_data
+		for e in fft_raw_data:
+			csv_file.write(str(e))
+			csv_file.write(',\n')
+			#csv_file.write(np.array_str(fft_raw_data))
 
 menubar = tk.Menu(root)
 filemenu = tk.Menu(menubar, tearoff=0)
 filemenu.add_command(label="Open...", command=OpenWAVFile, underline=0)
+filemenu.add_cascade(label="Export...", command=ExportCSV, underline=0)
 menubar.add_cascade(label="File", menu=filemenu)
 root.config(menu=menubar)
 
